@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProbeLens</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-sans, system-ui, sans-serif);
+    background: var(--surface-0, #f5f5f3);
+    color: var(--text-primary, #1a1a18);
+    min-height: 100vh;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface-2, #fff);
+    border-right: 0.5px solid var(--border, rgba(0,0,0,0.1));
+    padding: 2rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .logo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .logo-mark {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    letter-spacing: 0.3px;
+  }
+
+  .mode-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mode-label {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius, 8px);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #555);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+  }
+
+  .mode-btn:hover { background: var(--surface-1, #f0f0ee); }
+
+  .mode-btn.active {
+    background: var(--bg-accent, #e6f1fb);
+    color: var(--text-accent, #185fa5);
+    font-weight: 500;
+  }
+
+  .mode-btn i { font-size: 16px; }
+
+  .framework-ref {
+    margin-top: auto;
+  }
+
+  .ref-label {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .ref-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .ref-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 4px;
+  }
+
+  .ref-tag {
+    font-size: 10px;
+    font-weight: 500;
+    min-width: 44px;
+    color: var(--text-muted, #888);
+    letter-spacing: 0.3px;
+  }
+
+  .ref-tag.decomp { color: var(--text-accent, #185fa5); }
+  .ref-tag.solution { color: #639922; }
+
+  .ref-desc {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+  }
+
+  /* Main area */
+  .main {
+    display: flex;
+    flex-direction: column;
+    padding: 2.5rem 3rem;
+    max-width: 780px;
+  }
+
+  .mode-header {
+    margin-bottom: 2rem;
+  }
+
+  .mode-title {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+
+  .mode-desc {
+    font-size: 14px;
+    color: var(--text-secondary, #555);
+    line-height: 1.6;
+  }
+
+  /* Input area */
+  .input-section {
+    background: var(--surface-2, #fff);
+    border: 0.5px solid var(--border, rgba(0,0,0,0.1));
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .input-label {
+    font-size: 12px;
+    color: var(--text-muted, #888);
+    margin-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--text-primary);
+    background: transparent;
+    resize: none;
+    line-height: 1.6;
+    min-height: 80px;
+  }
+
+  textarea::placeholder { color: var(--text-muted, #aaa); }
+
+  .input-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 0.5px solid var(--border, rgba(0,0,0,0.08));
+  }
+
+  .char-hint { font-size: 12px; color: var(--text-muted, #aaa); }
+
+  .run-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--fill-accent, #185fa5);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius, 8px);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .run-btn:hover { opacity: 0.88; }
+  .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .run-btn i { font-size: 15px; }
+
+  /* Output area */
+  .output-section { display: none; }
+  .output-section.visible { display: block; }
+
+  .brief-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+
+  .brief-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  .brief-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border: 0.5px solid var(--border-strong, rgba(0,0,0,0.15));
+    border-radius: var(--radius, 8px);
+    background: transparent;
+    color: var(--text-secondary, #555);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+
+  .icon-btn:hover { background: var(--surface-1, #f0f0ee); }
+  .icon-btn i { font-size: 14px; }
+
+  /* Row cards */
+  .brief-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row-card {
+    background: var(--surface-2, #fff);
+    border: 0.5px solid var(--border, rgba(0,0,0,0.1));
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .row-card.has-gap {
+    border-color: var(--border-warning, #d4a017);
+  }
+
+  .row-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 0.5px solid var(--border, rgba(0,0,0,0.06));
+    background: var(--surface-1, #f8f8f6);
+  }
+
+  .row-tag {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .row-tag.decomp {
+    background: var(--bg-accent, #e6f1fb);
+    color: var(--text-accent, #185fa5);
+  }
+
+  .row-tag.solution {
+    background: #eaf3de;
+    color: #3b6d11;
+  }
+
+  .row-question {
+    font-size: 13px;
+    color: var(--text-secondary, #555);
+    flex: 1;
+  }
+
+  .row-knife {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    padding: 2px 8px;
+    border: 0.5px solid var(--border, rgba(0,0,0,0.1));
+    border-radius: 4px;
+  }
+
+  .row-body {
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .row-section-label {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    margin-bottom: 5px;
+    letter-spacing: 0.2px;
+  }
+
+  .row-content {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.6;
+  }
+
+  .gap-flag {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--bg-warning, #faeeda);
+    border-radius: 6px;
+    font-size: 12px;
+    color: #854f0b;
+    margin-top: 8px;
+    grid-column: 1 / -1;
+  }
+
+  .gap-flag i { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+
+  .walk-away {
+    grid-column: 1 / -1;
+    padding-top: 10px;
+    border-top: 0.5px solid var(--border, rgba(0,0,0,0.06));
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .walk-label {
+    font-size: 11px;
+    color: var(--text-muted, #888);
+    min-width: 100px;
+    padding-top: 1px;
+  }
+
+  .walk-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+
+  /* Hypothesis block */
+  .hypothesis-block {
+    margin-top: 1.25rem;
+    padding: 16px 20px;
+    background: var(--bg-accent, #e6f1fb);
+    border: 0.5px solid var(--border-accent, #b5d4f4);
+    border-radius: 12px;
+    display: none;
+  }
+
+  .hypothesis-block.visible { display: block; }
+
+  .hyp-label {
+    font-size: 11px;
+    color: var(--text-accent, #185fa5);
+    font-weight: 500;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .hyp-text {
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.65;
+    font-family: var(--font-voice, Georgia, serif);
+  }
+
+  /* Loading state */
+  .loading-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .skeleton-card {
+    background: var(--surface-2, #fff);
+    border: 0.5px solid var(--border, rgba(0,0,0,0.1));
+    border-radius: 12px;
+    padding: 20px 16px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  .skeleton-line {
+    background: var(--surface-1, #f0f0ee);
+    border-radius: 4px;
+    height: 12px;
+    margin-bottom: 8px;
+  }
+
+  .skeleton-line.short { width: 40%; }
+  .skeleton-line.mid { width: 65%; }
+  .skeleton-line.full { width: 100%; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .loading-section { display: none; }
+  .loading-section.visible { display: block; }
+
+  /* Streaming text cursor */
+  .streaming::after {
+    content: '▌';
+    animation: blink 0.8s step-end infinite;
+    color: var(--text-accent, #185fa5);
+    font-size: 12px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* Clarifying Qs */
+  .clarifying-qs {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cq-item {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.5;
+    padding: 2px 0;
+    padding-left: 12px;
+    position: relative;
+  }
+
+  .cq-item::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--text-muted, #aaa);
+    font-size: 11px;
+    top: 3px;
+  }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-mark">ProbeLens</span>
+      <span class="logo-sub">PM Problem Decomposition</span>
+    </div>
+
+    <nav class="mode-nav">
+      <div class="mode-label">Mode</div>
+      <button class="mode-btn active" id="btn-brief" onclick="switchMode('brief')">
+        <i class="ti ti-file-text" aria-hidden="true"></i>
+        Brief Generator
+      </button>
+      <button class="mode-btn" id="btn-practice" onclick="switchMode('practice')">
+        <i class="ti ti-school" aria-hidden="true"></i>
+        Interview Practice
+      </button>
+    </nav>
+
+    <div class="framework-ref">
+      <div class="ref-label">Framework</div>
+      <div class="ref-rows">
+        <div class="ref-row">
+          <span class="ref-tag decomp">WHY</span>
+          <span class="ref-desc">North Star</span>
+        </div>
+        <div class="ref-row">
+          <span class="ref-tag decomp">WHAT</span>
+          <span class="ref-desc">Math</span>
+        </div>
+        <div class="ref-row">
+          <span class="ref-tag decomp">WHO</span>
+          <span class="ref-desc">Players + Segment</span>
+        </div>
+        <div class="ref-row">
+          <span class="ref-tag decomp">WHERE</span>
+          <span class="ref-desc">Segment + Journey</span>
+        </div>
+        <div class="ref-row">
+          <span class="ref-tag decomp">WHEN</span>
+          <span class="ref-desc">Control</span>
+        </div>
+        <div class="ref-row">
+          <span class="ref-tag solution">HOW</span>
+          <span class="ref-desc">5 Whys</span>
+        </div>
+        <div class="ref-row">
+          <span class="ref-tag solution">SO WHAT</span>
+          <span class="ref-desc">Impact × Effort</span>
+        </div>
+        <div class="ref-row">
+          <span class="ref-tag solution">HOW WILL WE KNOW</span>
+          <span class="ref-desc">Math</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Brief Generator mode -->
+    <div id="mode-brief">
+      <div class="mode-header">
+        <div class="mode-title">Brief Generator</div>
+        <div class="mode-desc">Paste any problem statement. ProbeLens walks all 8 rows and produces a structured decomposition brief.</div>
+      </div>
+
+      <div class="input-section">
+        <div class="input-label">Problem statement</div>
+        <textarea id="problem-input" rows="4" placeholder="e.g. Orders are down 10% this week and leadership wants an explanation by Friday."></textarea>
+        <div class="input-footer">
+          <span class="char-hint">Be specific — the more context, the sharper the brief.</span>
+          <button class="run-btn" id="run-btn" onclick="runBrief()">
+            <i class="ti ti-player-play" aria-hidden="true"></i>
+            Generate brief
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading skeletons -->
+      <div class="loading-section" id="loading-section">
+        <div class="brief-header">
+          <span class="brief-title streaming">Analysing problem statement</span>
+        </div>
+        <div class="loading-rows">
+          <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line full"></div><div class="skeleton-line mid"></div></div>
+          <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line full"></div><div class="skeleton-line mid"></div></div>
+          <div class="skeleton-card"><div class="skeleton-line short"></div><div class="skeleton-line mid"></div></div>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="output-section" id="output-section">
+        <div class="brief-header">
+          <span class="brief-title" id="brief-title">Problem Decomposition Brief</span>
+          <div class="brief-actions">
+            <button class="icon-btn" onclick="copyBrief()"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+            <button class="icon-btn" onclick="resetBrief()"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button>
+          </div>
+        </div>
+        <div class="brief-rows" id="brief-rows"></div>
+        <div class="hypothesis-block" id="hypothesis-block">
+          <div class="hyp-label">Closing hypothesis</div>
+          <div class="hyp-text" id="hyp-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interview Practice mode (placeholder — Step 4) -->
+    <div id="mode-practice" style="display:none;">
+      <div class="mode-header">
+        <div class="mode-title">Interview Practice</div>
+        <div class="mode-desc">Coming in Step 4 — get a random product question and score your clarifying questions against the framework.</div>
+      </div>
+      <div style="padding: 2rem; background: var(--surface-2,#fff); border-radius: 12px; border: 0.5px solid var(--border); text-align: center; color: var(--text-muted, #aaa); font-size: 14px;">
+        <i class="ti ti-clock" style="font-size: 32px; display:block; margin-bottom: 8px;" aria-hidden="true"></i>
+        Interview Practice mode coming soon
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are ProbeLens, an AI-powered PM Problem Decomposition engine. You reason through problem statements using a strict 8-row first-principles framework. You never skip rows. You never jump to solutions before completing decomposition. You flag gaps instead of filling them with assumptions.
+
+THE FRAMEWORK:
+- Rows 1–5 (WHY → WHEN): Problem Decomposition
+- Rows 6–8 (HOW → HOW WILL WE KNOW): Solutioning
+
+ROW DEFINITIONS:
+1. WHY — Why does this matter? Knife: North Star/Framing. Walk away with: A clear goal or north-star metric.
+2. WHAT — What exactly is the problem? Knife: Math. Walk away with: A precise problem statement.
+3. WHO — Who is affected, and who is involved? Knife: Players + Segment. Walk away with: The target user or segment.
+4. WHERE — Where does it happen? Knife: Segment + Journey. Walk away with: The exact point where it breaks.
+5. WHEN — When did it start? Knife: Control. Walk away with: Candidates for what triggered it.
+6. HOW — How does the system produce this result? Knife: Math + Journey + Control. Walk away with: A falsifiable hypothesis.
+7. SO WHAT — What's the highest-leverage action given constraints? Knife: Prioritization (impact x effort). Walk away with: A decision to act on.
+8. HOW WILL WE KNOW — Did it work, and what could break? Knife: Math. Walk away with: Success criteria and guardrails.
+
+OPERATIONAL RULES:
+- Process all 8 rows in order. Never skip.
+- Flag gaps explicitly as [GAP: description of what's missing]
+- Never fill a gap with a silent assumption
+- HOW row must produce a falsifiable hypothesis before SO WHAT
+- Do not summarise the framework — apply it
+
+OUTPUT FORMAT (respond ONLY with valid JSON, no preamble, no markdown):
+{
+  "problem_summary": "one-line restatement of the problem",
+  "rows": [
+    {
+      "id": "WHY",
+      "type": "decomp",
+      "question": "Why does this matter?",
+      "knife": "North Star / Framing",
+      "clarifying_questions": ["question 1", "question 2", "question 3"],
+      "known": "what we know from the statement",
+      "missing": "what we don't know yet, or null if nothing is missing",
+      "gap_flag": "specific gap description, or null",
+      "walk_away": "the output for this row"
+    }
+  ],
+  "closing_hypothesis": "The falsifiable hypothesis from the HOW row, restated as a standalone sentence"
+}
+
+The "type" field must be "decomp" for rows 1-5 and "solution" for rows 6-8.
+Respond ONLY with the JSON object. No other text.`;
+
+const ROW_META = {
+  WHY: { label: "WHY", question: "Why does this matter?" },
+  WHAT: { label: "WHAT", question: "What exactly is the problem?" },
+  WHO: { label: "WHO", question: "Who is affected?" },
+  WHERE: { label: "WHERE", question: "Where does it happen?" },
+  WHEN: { label: "WHEN", question: "When did it start?" },
+  HOW: { label: "HOW", question: "How does the system produce this?" },
+  "SO WHAT": { label: "SO WHAT", question: "What's the highest-leverage action?" },
+  "HOW WILL WE KNOW": { label: "HOW WILL WE KNOW", question: "Did it work?" }
+};
+
+function switchMode(mode) {
+  document.getElementById('mode-brief').style.display = mode === 'brief' ? 'block' : 'none';
+  document.getElementById('mode-practice').style.display = mode === 'practice' ? 'block' : 'none';
+  document.getElementById('btn-brief').classList.toggle('active', mode === 'brief');
+  document.getElementById('btn-practice').classList.toggle('active', mode === 'practice');
+}
+
+async function runBrief() {
+  const input = document.getElementById('problem-input').value.trim();
+  if (!input) {
+    document.getElementById('problem-input').focus();
+    return;
+  }
+
+  const runBtn = document.getElementById('run-btn');
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> Analysing…';
+
+  document.getElementById('output-section').classList.remove('visible');
+  document.getElementById('hypothesis-block').classList.remove('visible');
+  document.getElementById('loading-section').classList.add('visible');
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: input }]
+      })
+    });
+
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || "").join("");
+    const clean = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+
+    renderBrief(parsed, input);
+  } catch (err) {
+    document.getElementById('loading-section').classList.remove('visible');
+    alert("Something went wrong. Check the console and try again.");
+    console.error(err);
+  }
+
+  runBtn.disabled = false;
+  runBtn.innerHTML = '<i class="ti ti-player-play" aria-hidden="true"></i> Generate brief';
+}
+
+function renderBrief(data, originalInput) {
+  document.getElementById('loading-section').classList.remove('visible');
+
+  const briefTitle = document.getElementById('brief-title');
+  briefTitle.textContent = `Brief: ${data.problem_summary}`;
+
+  const container = document.getElementById('brief-rows');
+  container.innerHTML = '';
+
+  (data.rows || []).forEach(row => {
+    const hasGap = row.gap_flag && row.gap_flag !== "null" && row.gap_flag !== null;
+    const isDecomp = row.type === 'decomp';
+
+    const card = document.createElement('div');
+    card.className = `row-card${hasGap ? ' has-gap' : ''}`;
+
+    const qs = (row.clarifying_questions || []).map(q =>
+      `<div class="cq-item">${q}</div>`
+    ).join('');
+
+    card.innerHTML = `
+      <div class="row-head">
+        <span class="row-tag ${isDecomp ? 'decomp' : 'solution'}">${row.id}</span>
+        <span class="row-question">${row.question || ''}</span>
+        <span class="row-knife">${row.knife || ''}</span>
+      </div>
+      <div class="row-body">
+        <div>
+          <div class="row-section-label">Clarifying questions</div>
+          <div class="clarifying-qs">${qs}</div>
+        </div>
+        <div>
+          <div class="row-section-label">Known</div>
+          <div class="row-content">${row.known || '—'}</div>
+          ${row.missing ? `<div class="row-section-label" style="margin-top:10px">Missing</div><div class="row-content" style="color:var(--text-secondary)">${row.missing}</div>` : ''}
+        </div>
+        ${hasGap ? `<div class="gap-flag"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span>[GAP] ${row.gap_flag}</span></div>` : ''}
+        <div class="walk-away">
+          <span class="walk-label">Walk away with</span>
+          <span class="walk-value">${row.walk_away || '—'}</span>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  if (data.closing_hypothesis) {
+    document.getElementById('hyp-text').textContent = data.closing_hypothesis;
+    document.getElementById('hypothesis-block').classList.add('visible');
+  }
+
+  document.getElementById('output-section').classList.add('visible');
+}
+
+function resetBrief() {
+  document.getElementById('output-section').classList.remove('visible');
+  document.getElementById('hypothesis-block').classList.remove('visible');
+  document.getElementById('problem-input').value = '';
+  document.getElementById('problem-input').focus();
+}
+
+function copyBrief() {
+  const rows = document.querySelectorAll('.row-card');
+  let text = document.getElementById('brief-title').textContent + '\n\n';
+
+  rows.forEach(card => {
+    const tag = card.querySelector('.row-tag')?.textContent || '';
+    const question = card.querySelector('.row-question')?.textContent || '';
+    const walkAway = card.querySelector('.walk-value')?.textContent || '';
+    const gap = card.querySelector('.gap-flag span')?.textContent || '';
+    text += `${tag}: ${question}\n→ ${walkAway}\n${gap ? gap + '\n' : ''}\n`;
+  });
+
+  const hyp = document.getElementById('hyp-text')?.textContent;
+  if (hyp) text += `\nClosing hypothesis: ${hyp}`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.icon-btn');
+    btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Copied';
+    setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy" aria-hidden="true"></i> Copy'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
