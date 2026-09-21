@@ -10,15 +10,13 @@ ProbeLens has two modes:
 
 **Brief Generator** — Paste any problem statement. The AI walks all 8 rows of the framework sequentially, produces clarifying questions for each row, flags information gaps, and outputs a locked decomposition brief with a closing falsifiable hypothesis.
 
-<!-- Replace the two lines below with your screenshots once saved to this folder -->
-<!-- ![Brief Generator Layout](./screenshots/brief-layout.png) -->
-<!-- ![Brief Generator Sample](./screenshots/brief-sample.png) -->
+![Brief Generator Layout](./screenshots/brief_generator_layout.png)
+![Brief Generator Sample](./screenshots/brief_generator_sample.png)
 
 **Interview Practice** — Get a random PM question from a bank of 18 questions across 4 categories. Ask your clarifying questions freely. ProbeLens scores your response row-by-row against the framework, flags what you missed and what a strong answer adds, and lets you compare your thinking against the full brief.
 
-<!-- Replace the two lines below with your screenshots once saved to this folder -->
-<!-- ![Interview Practice List](./screenshots/practice-list.png) -->
-<!-- ![Interview Practice Score](./screenshots/practice-score.png) -->
+![Interview Practice List](./screenshots/interview_practice_layout.png)
+![Interview Practice Score](./screenshots/interview_practice_sample.png)
 
 ---
 
@@ -273,14 +271,14 @@ Before calibration the questions were correct but read like written analysis —
 
 ```
 probelens/
-├── README.md                      # This file
-├── probelens.html                 # The full tool — both modes, self-contained
-├── probelens_system_prompt.md     # System prompt source — framework backbone
+├── README.md                          # This file
+├── probelens.html                     # The full tool — both modes, self-contained
+├── probelens_system_prompt.md         # System prompt source — framework backbone
 └── screenshots/
-    ├── brief-layout.png           # Brief Generator empty state
-    ├── brief-sample.png           # Brief Generator full output
-    ├── practice-list.png          # Interview Practice question list
-    └── practice-score.png         # Interview Practice score output
+    ├── brief_generator_layout.png     # Brief Generator empty state
+    ├── brief_generator_sample.png     # Brief Generator full output
+    ├── interview_practice_layout.png  # Interview Practice question list
+    └── interview_practice_sample.png  # Interview Practice score output
 ```
 
 All logic, UI, and API calls live in a single `probelens.html` file. No backend, no dependencies, no build step. Open in a browser or host on any static server.
