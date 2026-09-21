@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProbeLens</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  background: var(--surface-0, #f4f4f2);
+  color: var(--text-primary, #1a1a18);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 180px;
+  flex-shrink: 0;
+  background: var(--surface-2, #fff);
+  border-right: 0.5px solid var(--border, rgba(0,0,0,0.1));
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  gap: 24px;
+}
+
+.logo-mark { font-size: 16px; font-weight: 500; color: var(--text-primary); }
+.logo-sub  { font-size: 10px; color: var(--text-muted, #999); margin-top: 2px; }
+
+.nav-label { font-size: 10px; color: var(--text-muted, #aaa); margin-bottom: 4px; letter-spacing: 0.3px; }
+
+.mode-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 8px; border-radius: 7px; border: none;
+  background: transparent; color: var(--text-secondary, #555);
+  font-size: 12px; cursor: pointer; text-align: left; width: 100%;
+}
+.mode-btn:hover { background: var(--surface-1, #f0f0ee); }
+.mode-btn.active { background: var(--bg-accent, #e6f1fb); color: var(--text-accent, #185fa5); font-weight: 500; }
+.mode-btn i { font-size: 15px; }
+
+.fw-list { display: flex; flex-direction: column; gap: 1px; margin-top: auto; }
+.fw-item  { display: flex; align-items: center; gap: 6px; padding: 3px 4px; }
+.fw-pill  {
+  font-size: 9px; font-weight: 500; padding: 1px 5px;
+  border-radius: 3px; min-width: 52px; text-align: center;
+}
+.fw-pill.d { background: #e6f1fb; color: #185fa5; }
+.fw-pill.s { background: #eaf3de; color: #3b6d11; }
+.fw-knife { font-size: 10px; color: var(--text-muted, #aaa); }
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.page-title { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+.page-desc  { font-size: 13px; color: var(--text-secondary, #666); margin-bottom: 20px; }
+
+/* ── Input ── */
+.input-box {
+  background: var(--surface-2, #fff);
+  border: 0.5px solid var(--border, rgba(0,0,0,0.12));
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.input-label { font-size: 11px; color: var(--text-muted, #aaa); margin-bottom: 6px; }
+textarea {
+  width: 100%; border: none; outline: none;
+  font-family: inherit; font-size: 14px;
+  color: var(--text-primary); background: transparent;
+  resize: none; line-height: 1.55; min-height: 64px;
+}
+textarea::placeholder { color: var(--text-muted, #bbb); }
+.input-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 10px; margin-top: 10px;
+  border-top: 0.5px solid var(--border, rgba(0,0,0,0.07));
+}
+.hint { font-size: 11px; color: var(--text-muted, #bbb); }
+
+.run-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; background: #185fa5; color: #fff;
+  border: none; border-radius: 7px; font-size: 12px;
+  font-weight: 500; cursor: pointer;
+}
+.run-btn:hover { background: #1450888; opacity: 0.9; }
+.run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Loading ── */
+.loading { display: none; }
+.loading.on { display: block; }
+.skel-table {
+  width: 100%; border-radius: 10px; overflow: hidden;
+  border: 0.5px solid var(--border, rgba(0,0,0,0.1));
+  background: var(--surface-2, #fff);
+  animation: pulse 1.3s ease-in-out infinite;
+}
+.skel-row {
+  display: grid; grid-template-columns: 80px 1fr 1fr 1fr;
+  gap: 10px; padding: 12px 14px;
+  border-bottom: 0.5px solid var(--border, rgba(0,0,0,0.06));
+}
+.skel-row:last-child { border-bottom: none; }
+.skel-cell { height: 28px; background: var(--surface-1, #efefed); border-radius: 4px; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+.loading-label {
+  font-size: 13px; color: var(--text-secondary, #666);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.loading-label::after {
+  content: '▌'; animation: blink .7s step-end infinite;
+  color: #185fa5; font-size: 11px;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ── Output ── */
+.output { display: none; }
+.output.on { display: block; }
+
+.out-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px; gap: 12px;
+}
+.out-title { font-size: 13px; font-weight: 500; flex: 1; min-width: 0; }
+.btn-row { display: flex; gap: 6px; flex-shrink: 0; }
+.sm-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border: 0.5px solid var(--border-strong, rgba(0,0,0,0.15));
+  border-radius: 6px; background: transparent;
+  color: var(--text-secondary, #555); font-size: 11px; cursor: pointer;
+}
+.sm-btn:hover { background: var(--surface-1, #f0f0ee); }
+.sm-btn i { font-size: 13px; }
+
+/* ── Table ── */
+.brief-wrap { overflow-x: auto; border-radius: 10px; border: 0.5px solid var(--border, rgba(0,0,0,0.1)); }
+
+table {
+  width: 100%; border-collapse: collapse;
+  background: var(--surface-2, #fff);
+  table-layout: fixed;
+}
+
+thead th {
+  font-size: 10px; font-weight: 500; color: var(--text-muted, #999);
+  text-align: left; padding: 8px 12px;
+  background: var(--surface-1, #f8f8f6);
+  border-bottom: 0.5px solid var(--border, rgba(0,0,0,0.1));
+  letter-spacing: 0.2px; white-space: nowrap;
+}
+thead th:nth-child(1) { width: 80px; }
+thead th:nth-child(2) { width: 30%; }
+thead th:nth-child(3) { width: 30%; }
+thead th:nth-child(4) { width: 28%; }
+
+tbody tr { border-bottom: 0.5px solid var(--border, rgba(0,0,0,0.07)); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface-1, #fafaf8); }
+tbody tr.divider td { height: 6px; background: var(--surface-1, #f2f2f0); padding: 0; border-bottom: 0.5px solid var(--border, rgba(0,0,0,0.1)); }
+
+td {
+  padding: 10px 12px; font-size: 12px;
+  color: var(--text-primary); vertical-align: top;
+  line-height: 1.5; word-wrap: break-word; overflow-wrap: break-word;
+}
+
+.lens-pill {
+  display: inline-flex; align-items: center;
+  font-size: 10px; font-weight: 500; padding: 2px 7px;
+  border-radius: 3px; white-space: nowrap;
+}
+.lens-pill.d { background: #e6f1fb; color: #185fa5; }
+.lens-pill.s { background: #eaf3de; color: #3b6d11; }
+.knife { display: block; font-size: 10px; color: var(--text-muted, #aaa); margin-top: 4px; }
+
+.cq { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.cq li {
+  font-size: 11px; color: var(--text-secondary, #555);
+  padding-left: 10px; position: relative; line-height: 1.45;
+}
+.cq li::before { content:'→'; position:absolute; left:0; color:var(--text-muted,#ccc); font-size:10px; top:1px; }
+
+.known { font-size: 11px; color: var(--text-primary); line-height: 1.45; }
+.missing { font-size: 10px; color: var(--text-muted, #999); margin-top: 4px; line-height: 1.4; }
+
+.locked { font-size: 11px; font-weight: 500; line-height: 1.5; color: var(--text-primary); padding: 6px 8px; background: var(--surface-1, #f8f8f6); border-left: 2px solid #185fa5; border-radius: 0 4px 4px 0; }
+.locked.has-gap { border-left-color: #d4a017; background: #fffbf2; font-weight: 400; color: var(--text-secondary, #555); }
+.gap-chip {
+  display: flex; align-items: flex-start; gap: 4px;
+  margin-top: 5px; padding: 4px 7px;
+  background: #faeeda; border-radius: 4px;
+  font-size: 10px; color: #7a4a0a; line-height: 1.4;
+}
+.gap-chip i { font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+
+/* ── Hypothesis ── */
+.hyp {
+  display: none; margin-top: 12px;
+  padding: 12px 16px;
+  background: #e6f1fb;
+  border: 0.5px solid #b5d4f4;
+  border-radius: 10px;
+}
+.hyp.on { display: block; }
+.hyp-label { font-size: 10px; color: #185fa5; font-weight: 500; margin-bottom: 5px; letter-spacing: 0.3px; }
+.hyp-text  { font-size: 12px; color: var(--text-primary); line-height: 1.6; font-family: var(--font-voice, Georgia, serif); }
+
+/* ── Practice placeholder ── */
+.placeholder {
+  background: var(--surface-2,#fff); border-radius: 10px;
+  border: 0.5px solid var(--border); padding: 40px;
+  text-align: center; color: var(--text-muted,#aaa); font-size: 13px;
+}
+.placeholder i { font-size: 28px; display:block; margin-bottom: 8px; }
+/* ── Practice mode ── */
+.cat-btn {
+  padding: 5px 12px; border-radius: 20px; border: 0.5px solid var(--border-strong, rgba(0,0,0,0.15));
+  background: transparent; font-size: 11px; color: var(--text-secondary, #555); cursor: pointer;
+}
+.cat-btn:hover { background: var(--surface-1, #f0f0ee); }
+.cat-btn.active { background: var(--bg-accent, #e6f1fb); color: var(--text-accent, #185fa5); border-color: #b5d4f4; font-weight: 500; }
+
+.q-list { display: flex; flex-direction: column; gap: 6px; }
+
+.q-item {
+  padding: 10px 14px; background: var(--surface-2, #fff);
+  border: 0.5px solid var(--border, rgba(0,0,0,0.1)); border-radius: 8px;
+  font-size: 13px; color: var(--text-primary); cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: border-color 0.15s, background 0.15s;
+}
+.q-item:hover { border-color: #185fa5; background: #fafbff; }
+.q-item .q-cat {
+  font-size: 10px; padding: 2px 7px; border-radius: 3px; flex-shrink: 0; margin-left: 10px;
+}
+.q-cat.diagnosis { background: #fdeaea; color: #922; }
+.q-cat.design    { background: #eaf3de; color: #3b6d11; }
+.q-cat.growth    { background: #e6f1fb; color: #185fa5; }
+.q-cat.ambiguous { background: #f3eafd; color: #5b2d8e; }
+
+.q-card {
+  padding: 14px 16px; background: var(--surface-2,#fff);
+  border: 0.5px solid var(--border-accent, #b5d4f4);
+  border-left: 3px solid #185fa5;
+  border-radius: 8px; font-size: 14px; font-weight: 500;
+  color: var(--text-primary); line-height: 1.5;
+}
+
+.score-summary {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;
+}
+.score-pill {
+  padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+}
+.score-pill.covered  { background: #eaf3de; color: #3b6d11; }
+.score-pill.shallow  { background: #faeeda; color: #7a4a0a; }
+.score-pill.missed   { background: #fdeaea; color: #922; }
+.score-pill.total    { background: var(--bg-accent, #e6f1fb); color: #185fa5; }
+
+.coverage-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 3px;
+}
+.coverage-badge.covered  { background: #eaf3de; color: #3b6d11; }
+.coverage-badge.shallow  { background: #faeeda; color: #7a4a0a; }
+.coverage-badge.missed   { background: #fdeaea; color: #922; }
+
+.score-cards { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.score-card { background: var(--surface-2,#fff); border: 0.5px solid var(--border,rgba(0,0,0,0.1)); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.score-card-head { display: flex; align-items: center; gap: 8px; }
+.score-knife { font-size: 10px; color: var(--text-muted,#aaa); }
+.score-asked { font-size: 12px; color: var(--text-secondary,#555); line-height: 1.45; }
+.score-adds { font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.5; padding: 6px 8px; background: var(--surface-1,#f8f8f6); border-left: 2px solid #185fa5; border-radius: 0 4px 4px 0; }
+.score-mistake { font-size: 11px; color: #7a2020; line-height: 1.45; padding: 5px 8px; background: #fdeaea; border-radius: 4px; }
+.score-section-label { font-size: 10px; font-weight: 500; color: var(--text-muted,#aaa); letter-spacing: 0.3px; margin-top: 4px; }
+/* ── API Key Screen ── */
+.api-screen {
+  position: fixed; inset: 0; background: var(--surface-0, #f4f4f2);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.api-card {
+  background: #fff; border: 0.5px solid var(--border, rgba(0,0,0,0.1));
+  border-radius: 16px; padding: 36px 32px; max-width: 440px; width: 90%;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+.api-logo { font-size: 20px; font-weight: 500; margin-bottom: 4px; }
+.api-sub  { font-size: 12px; color: var(--text-muted,#999); margin-bottom: 24px; }
+.api-label { font-size: 11px; color: var(--text-secondary,#555); margin-bottom: 6px; font-weight: 500; }
+.api-input {
+  width: 100%; padding: 9px 12px; border: 0.5px solid var(--border-strong,rgba(0,0,0,0.18));
+  border-radius: 8px; font-size: 13px; font-family: monospace;
+  outline: none; margin-bottom: 8px; color: var(--text-primary);
+}
+.api-input:focus { border-color: #185fa5; }
+.api-hint { font-size: 11px; color: var(--text-muted,#aaa); margin-bottom: 20px; line-height: 1.5; }
+.api-hint a { color: #185fa5; text-decoration: none; }
+.api-btn {
+  width: 100%; padding: 10px; background: #185fa5; color: #fff;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.api-btn:hover { opacity: 0.88; }
+.api-err { font-size: 11px; color: #922; margin-top: 8px; display: none; }
+.api-change {
+  font-size: 10px; color: var(--text-muted,#aaa); cursor: pointer;
+  text-decoration: underline; background: none; border: none; padding: 0;
+  margin-top: 8px; display: block;
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div>
+    <div class="logo-mark">ProbeLens</div>
+    <div class="logo-sub">PM Problem Decomposition</div>
+  </div>
+
+  <div>
+    <div class="nav-label">Mode</div>
+    <button class="mode-btn active" id="btn-brief" onclick="switchMode('brief')">
+      <i class="ti ti-file-text" aria-hidden="true"></i> Brief Generator
+    </button>
+    <button class="mode-btn" id="btn-practice" onclick="switchMode('practice')">
+      <i class="ti ti-school" aria-hidden="true"></i> Interview Practice
+    </button>
+  </div>
+
+  <div class="fw-list">
+    <div class="nav-label">Framework</div>
+    <div class="fw-item"><span class="fw-pill d">WHY</span><span class="fw-knife">North Star</span></div>
+    <div class="fw-item"><span class="fw-pill d">WHAT</span><span class="fw-knife">Math</span></div>
+    <div class="fw-item"><span class="fw-pill d">WHO</span><span class="fw-knife">Players</span></div>
+    <div class="fw-item"><span class="fw-pill d">WHERE</span><span class="fw-knife">Journey</span></div>
+    <div class="fw-item"><span class="fw-pill d">WHEN</span><span class="fw-knife">Control</span></div>
+    <div class="fw-item"><span class="fw-pill s">HOW</span><span class="fw-knife">5 Whys</span></div>
+    <div class="fw-item"><span class="fw-pill s">SO WHAT</span><span class="fw-knife">Impact×Effort</span></div>
+    <div class="fw-item"><span class="fw-pill s">HOW WE KNOW</span><span class="fw-knife">Math</span></div>
+    <button class="api-change" onclick="showApiScreen()">Change API key</button>
+  </div>
+</aside>
+
+<!-- API Key Screen -->
+<div class="api-screen" id="api-screen">
+  <div class="api-card">
+    <div class="api-logo">🔍 ProbeLens</div>
+    <div class="api-sub">PM Problem Decomposition Tool</div>
+    <div class="api-label">Your Anthropic API key</div>
+    <input class="api-input" id="api-key-input" type="password" placeholder="sk-ant-..." />
+    <div class="api-hint">
+      Your key is used only in your browser and never stored on any server.
+      Get a free key at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>
+    </div>
+    <button class="api-btn" onclick="saveApiKey()">Start using ProbeLens →</button>
+    <div class="api-err" id="api-err">Please enter a valid API key starting with sk-ant-</div>
+  </div>
+</div>
+
+<main class="main">
+
+  <!-- Brief Generator -->
+  <div id="mode-brief">
+    <div class="page-title">Brief Generator</div>
+    <div class="page-desc">Paste any problem statement — ProbeLens walks all 8 rows and produces a structured decomposition brief.</div>
+
+    <div class="input-box">
+      <div class="input-label">Problem statement</div>
+      <textarea id="problem-input" placeholder="e.g. Orders are down 10% this week and leadership wants an explanation by Friday."></textarea>
+      <div class="input-foot">
+        <span class="hint">More context → sharper brief.</span>
+        <button class="run-btn" id="run-btn" onclick="runBrief()">
+          <i class="ti ti-player-play" aria-hidden="true"></i> Generate brief
+        </button>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="loading-label">Analysing problem statement</div>
+      <div class="skel-table">
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+      </div>
+    </div>
+
+    <div class="output" id="output">
+      <div class="out-header">
+        <div class="out-title" id="out-title">Problem Decomposition Brief</div>
+        <div class="btn-row">
+          <button class="sm-btn" id="copy-btn" onclick="copyBrief()"><i class="ti ti-copy" aria-hidden="true"></i> Copy</button>
+          <button class="sm-btn" onclick="resetBrief()"><i class="ti ti-refresh" aria-hidden="true"></i> Reset</button>
+        </div>
+      </div>
+      <div class="brief-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Lens</th>
+              <th>Clarifying questions</th>
+              <th>Known / missing</th>
+              <th>Locked output</th>
+            </tr>
+          </thead>
+          <tbody id="brief-body"></tbody>
+        </table>
+      </div>
+      <div class="hyp" id="hyp">
+        <div class="hyp-label">Closing hypothesis</div>
+        <div class="hyp-text" id="hyp-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interview Practice -->
+  <div id="mode-practice" style="display:none;">
+    <div class="page-title">Interview Practice</div>
+    <div class="page-desc">Get a random PM question. Ask your clarifying questions. ProbeLens scores you row-by-row against the framework.</div>
+
+    <!-- State: pick question -->
+    <div id="p-pick">
+      <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        <button class="cat-btn active" onclick="filterCat('all')">All</button>
+        <button class="cat-btn" onclick="filterCat('diagnosis')">Metric drops</button>
+        <button class="cat-btn" onclick="filterCat('design')">Design</button>
+        <button class="cat-btn" onclick="filterCat('growth')">Growth</button>
+        <button class="cat-btn" onclick="filterCat('ambiguous')">Ambiguous</button>
+      </div>
+      <div id="q-list" class="q-list"></div>
+      <button class="run-btn" style="margin-top:12px;" onclick="randomQuestion()">
+        <i class="ti ti-dice" aria-hidden="true"></i> Random question
+      </button>
+    </div>
+
+    <!-- State: answer -->
+    <div id="p-answer" style="display:none;">
+      <div class="q-card" id="active-q-display"></div>
+      <div class="input-box" style="margin-top:12px;">
+        <div class="input-label">Your clarifying questions</div>
+        <textarea id="user-answer" rows="6" placeholder="Ask your clarifying questions here. Cover WHY, WHAT, WHO, WHERE, WHEN before jumping to HOW. Type freely — as many questions as you want. Hit Score me when done."></textarea>
+        <div class="input-foot">
+          <button class="sm-btn" onclick="resetPractice()"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+          <button class="run-btn" id="score-btn" onclick="scoreAnswer()">
+            <i class="ti ti-chart-bar" aria-hidden="true"></i> Score me
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- State: loading -->
+    <div id="p-loading" style="display:none;">
+      <div class="loading-label">Scoring your questions against the framework</div>
+      <div class="skel-table">
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+        <div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div>
+      </div>
+    </div>
+
+    <!-- State: results -->
+    <div id="p-results" style="display:none;">
+      <div class="out-header">
+        <div class="out-title" id="score-title">Score</div>
+        <div class="btn-row">
+          <button class="sm-btn" onclick="showBrief()"><i class="ti ti-file-text" aria-hidden="true"></i> See full brief</button>
+          <button class="sm-btn" onclick="resetPractice()"><i class="ti ti-refresh" aria-hidden="true"></i> Try another</button>
+        </div>
+      </div>
+
+      <!-- Score summary -->
+      <div class="score-summary" id="score-summary"></div>
+
+      <!-- Row rubric cards -->
+      <div class="score-cards" id="rubric-body"></div>
+
+      <!-- Full brief comparison -->
+      <div id="brief-compare" style="display:none; margin-top:16px;">
+        <div style="font-size:12px; font-weight:500; margin-bottom:8px; color:var(--text-primary)">Full brief — what ProbeLens would produce</div>
+        <div class="brief-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:80px">Lens</th>
+                <th>Clarifying questions</th>
+                <th>Known / missing</th>
+                <th>Locked output</th>
+              </tr>
+            </thead>
+            <tbody id="compare-body"></tbody>
+          </table>
+        </div>
+        <div class="hyp" id="compare-hyp" style="margin-top:10px;">
+          <div class="hyp-label">Closing hypothesis</div>
+          <div class="hyp-text" id="compare-hyp-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const SYSTEM_PROMPT = `You are ProbeLens, an AI-powered PM Problem Decomposition engine. You reason through problem statements using a strict 8-row first-principles framework. You never skip rows. You never jump to solutions before completing decomposition. You flag gaps instead of filling them with assumptions.
+
+THE FRAMEWORK:
+- Rows 1-5 (WHY to WHEN): Problem Decomposition
+- Rows 6-8 (HOW to HOW WILL WE KNOW): Solutioning
+
+ROW DEFINITIONS:
+1. WHY - Why does this matter? Knife: North Star/Framing. Walk away with: A clear goal or north-star metric.
+2. WHAT - What exactly is the problem? Knife: Math. Walk away with: A precise problem statement.
+3. WHO - Who is affected, and who is involved? Knife: Players + Segment. Walk away with: The target user or segment.
+4. WHERE - Where does it happen? Knife: Segment + Journey. Walk away with: The exact point where it breaks.
+5. WHEN - When did it start? Knife: Control. Walk away with: Candidates for what triggered it.
+6. HOW - How does the system produce this result? Knife: Math + Journey + Control. Walk away with: A falsifiable hypothesis.
+7. SO WHAT - What is the highest-leverage action given constraints? Knife: Prioritization (impact x effort). Walk away with: A decision to act on.
+8. HOW WILL WE KNOW - Did it work, and what could break? Knife: Math. Walk away with: Success criteria and guardrails.
+
+OPERATIONAL RULES:
+- Process all 8 rows in order. Never skip.
+- Flag gaps explicitly in gap_flag field
+- Never fill a gap with a silent assumption
+- HOW row must produce a falsifiable hypothesis before SO WHAT
+- Do not summarise the framework, apply it
+
+CRITICAL RULE FOR locked_output:
+Every row MUST end with a sharp, locked statement — something a PM can act on, challenge, or carry forward.
+- If information is sufficient: state the locked conclusion directly and confidently.
+- If there is a gap: still give the BEST AVAILABLE locked statement using what is known, then note it needs validation. Never write vague hedges like "undefined until clarified" or "requires more information". Always commit to a candidate answer.
+- Format for gap rows: "[Best available answer]. Needs validation: [what to confirm]"
+- Format for HOW row: a proper falsifiable hypothesis with named metric and threshold.
+- Format for HOW WILL WE KNOW: "Win if: [metric] [threshold]. Stop if: [guardrail] drops more than [X]%."
+
+CLARIFYING QUESTION STYLE — CRITICAL:
+Your clarifying questions must match this style exactly. Study these examples:
+
+EXAMPLE 1 — Estimate Elevators in a 50 Story Building:
+- "What is the purpose of the building — is it a residential tower, commercial office, hospital or mixed-use? Because peak traffic patterns and elevator frequency needs are completely different for each."
+- "What is the expected occupancy — how many people are in the building at any given time, and what does peak hour traffic look like — say a 9am office rush vs a residential building with staggered movement?"
+- "What is the acceptable wait time — is the service level target 30 seconds, 60 seconds or longer? This directly determines how many elevators are needed to meet that standard."
+
+EXAMPLE 2 — Orders Down 10% on Amazon:
+- "What is the time period of this drop — is it happening today, this week or over the last quarter? A sudden drop points to a technical issue while a gradual decline points to a strategic or market problem."
+- "Is this drop global or specific — is it across all geographies or isolated to a market like India or the US? Is it across all categories or concentrated in one like electronics or fashion?"
+- "Are competitors seeing the same trend — is this an Amazon-specific problem or an industry-wide slowdown? If Flipkart and Meesho are also down the cause is external."
+
+EXAMPLE 3 — Should Instagram Stories Stay 24 or 48 Hours:
+- "What is the goal of this change — are we trying to improve creator engagement, viewer retention or overall time spent on the platform?"
+- "Who is this primarily for — the creator wanting more shelf life for their content, or the viewer who may feel overwhelmed by a growing backlog of unseen stories?"
+- "What do story consumption patterns actually show — are most stories already watched within the first 6 hours, making 48 hours largely irrelevant, or is there a meaningful tail of views we are cutting off at hour 24?"
+
+EXAMPLE 4 — Amazon Enters Hyperlocal Business:
+- "What is the strategic intent behind this move — are we defending against Blinkit and Zepto or building an entirely new revenue vertical?"
+- "Which geography do we start with — an infrastructure-ready metro like Bangalore or a smaller city to pilot and scale?"
+- "What assets can Amazon leverage — existing warehouses, delivery fleet and Prime membership, or does this need an entirely new dark store and rider network from scratch?"
+
+EXAMPLE 5 — How Would You Grow Google Search:
+- "What does growth mean here — are we optimizing for DAU, query volume, ad revenue or new user acquisition?"
+- "Where is Google losing ground — are users switching to TikTok, Reddit or ChatGPT for certain searches instead?"
+- "What is the monetization angle — are we growing search to drive more ad revenue or to defend market share against AI-native search competitors?"
+
+EXAMPLE 6 — Engagement on Zomato UGC Gone Down:
+- "What is UGC here exactly — are we talking about reviews, photos, ratings or social feed content within Zomato?"
+- "Is the drop on the creation side or consumption side — are fewer users posting reviews or are existing reviews getting less views and interactions?"
+- "Is this drop platform-wide or category specific — for example only restaurant reviews declining while grocery reviews remain stable?"
+
+EXAMPLE 7 — Design a Garage Door Opener:
+- "What is the core purpose — a basic remote-controlled opener or a smart device integrated with Alexa or Google Home?"
+- "Who is the primary user — a homeowner, a fleet operator or a logistics company needing automated access?"
+- "What problem are we solving — is this about convenience, security or remote access for people who forget to close their garage?"
+
+STYLE RULES derived from these examples:
+1. Use a dash (—) before presenting options, not a colon or comma
+2. Name real entities — Blinkit, Zepto, Bangalore, TikTok, Reddit, ChatGPT, Flipkart — not generic placeholders
+3. Add inline reasoning after the question when it helps — "A sudden drop points to a technical issue while a gradual decline points to a strategic problem"
+4. Challenge the premise when relevant — "making 48 hours largely irrelevant" or "if Flipkart and Meesho are also down the cause is external"
+5. Keep each question to one or two sentences maximum — no sub-clauses, no parenthetical lists
+6. Sound like a sharp PM speaking in a room, not a consultant writing a document
+
+OUTPUT: Respond ONLY with valid compact JSON (no preamble, no markdown, no extra whitespace):
+{"problem_summary":"one-line restatement","rows":[{"id":"WHY","type":"decomp","knife":"North Star / Framing","clarifying_questions":["q1","q2","q3"],"known":"what we know","missing":"what we don't know or null","gap_flag":"gap description or null","locked_output":"sharp locked statement a PM can act on"}],"closing_hypothesis":"falsifiable hypothesis from HOW row"}
+
+type is "decomp" for rows 1-5, "solution" for rows 6-8. Max 2 sentences per field. Exactly 3 clarifying_questions per row.`;
+
+function switchMode(mode) {
+  document.getElementById('mode-brief').style.display = mode === 'brief' ? 'block' : 'none';
+  document.getElementById('mode-practice').style.display = mode === 'practice' ? 'block' : 'none';
+  document.getElementById('btn-brief').classList.toggle('active', mode === 'brief');
+  document.getElementById('btn-practice').classList.toggle('active', mode === 'practice');
+}
+
+async function runBrief() {
+  const input = document.getElementById('problem-input').value.trim();
+  if (!input) { document.getElementById('problem-input').focus(); return; }
+
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> Analysing…';
+
+  document.getElementById('output').classList.remove('on');
+  document.getElementById('hyp').classList.remove('on');
+  document.getElementById('loading').classList.add('on');
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: makeHeaders(),
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: "user", content: input }]
+      })
+    });
+
+    const data = await res.json();
+    const raw = (data.content || []).map(b => b.text || "").join("").replace(/```json|```/g, "").trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch(e) {
+      const s = raw.indexOf('{'), end = raw.lastIndexOf('}');
+      if (s !== -1 && end !== -1) parsed = JSON.parse(raw.slice(s, end + 1));
+      else throw new Error("JSON parse failed: " + e.message);
+    }
+    renderBrief(parsed);
+  } catch(err) {
+    console.error(err);
+    alert("Something went wrong — check the console.");
+  }
+
+  document.getElementById('loading').classList.remove('on');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-player-play" aria-hidden="true"></i> Generate brief';
+}
+
+function renderBrief(data) {
+  document.getElementById('out-title').textContent = data.problem_summary || 'Problem Decomposition Brief';
+  const tbody = document.getElementById('brief-body');
+  tbody.innerHTML = '';
+
+  let lastType = null;
+  (data.rows || []).forEach(row => {
+    const isDecomp = row.type === 'decomp';
+    const hasGap = row.gap_flag && row.gap_flag !== 'null' && row.gap_flag !== null;
+
+    if (lastType === 'decomp' && !isDecomp) {
+      const div = document.createElement('tr');
+      div.className = 'divider';
+      div.innerHTML = '<td colspan="4"></td>';
+      tbody.appendChild(div);
+    }
+    lastType = row.type;
+
+    const qs = (row.clarifying_questions || []).map(q => `<li>${q}</li>`).join('');
+
+    const lockedOutput = row.locked_output || row.walk_away || '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <span class="lens-pill ${isDecomp ? 'd' : 's'}">${row.id}</span>
+        <span class="knife">${row.knife || ''}</span>
+      </td>
+      <td><ul class="cq">${qs}</ul></td>
+      <td>
+        <div class="known">${row.known || '—'}</div>
+        ${row.missing && row.missing !== 'null' ? `<div class="missing">${row.missing}</div>` : ''}
+      </td>
+      <td>
+        <div class="locked${hasGap ? ' has-gap' : ''}">${lockedOutput}</div>
+        ${hasGap ? `<div class="gap-chip"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span>${row.gap_flag}</span></div>` : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  if (data.closing_hypothesis) {
+    document.getElementById('hyp-text').textContent = data.closing_hypothesis;
+    document.getElementById('hyp').classList.add('on');
+  }
+
+  document.getElementById('output').classList.add('on');
+}
+
+function resetBrief() {
+  document.getElementById('output').classList.remove('on');
+  document.getElementById('hyp').classList.remove('on');
+  document.getElementById('problem-input').value = '';
+  document.getElementById('problem-input').focus();
+}
+
+function copyBrief() {
+  const title = document.getElementById('out-title').textContent;
+  const rows = document.querySelectorAll('#brief-body tr:not(.divider)');
+  let text = title + '\n\n';
+  rows.forEach(tr => {
+    const lens = tr.querySelector('.lens-pill')?.textContent || '';
+    const walk = tr.querySelector('.locked')?.textContent || '';
+    const gap  = tr.querySelector('.gap-chip span')?.textContent || '';
+    const qs   = [...tr.querySelectorAll('.cq li')].map(li => '  → ' + li.textContent).join('\n');
+    text += `${lens}\n${qs}\nLocked: ${walk}${gap ? ' [GAP: ' + gap + ']' : ''}\n\n`;
+  });
+  const hyp = document.getElementById('hyp-text')?.textContent;
+  if (hyp) text += 'Closing hypothesis:\n' + hyp;
+
+  const btn = document.getElementById('copy-btn');
+
+  const fallback = () => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try {
+      document.execCommand('copy');
+      btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Copied';
+    } catch(e) {
+      btn.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i> Failed';
+    }
+    document.body.removeChild(ta);
+    setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy" aria-hidden="true"></i> Copy'; }, 2000);
+  };
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Copied';
+      setTimeout(() => { btn.innerHTML = '<i class="ti ti-copy" aria-hidden="true"></i> Copy'; }, 2000);
+    }).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+// ── API Key Management ──
+function getApiKey() { return localStorage.getItem('probelens_api_key') || ''; }
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const err = document.getElementById('api-err');
+  if (!key.startsWith('sk-ant-') && !key.startsWith('sk-')) {
+    err.style.display = 'block';
+    return;
+  }
+  err.style.display = 'none';
+  localStorage.setItem('probelens_api_key', key);
+  document.getElementById('api-screen').style.display = 'none';
+}
+
+function showApiScreen() {
+  document.getElementById('api-key-input').value = getApiKey();
+  document.getElementById('api-screen').style.display = 'flex';
+}
+
+function initApiKey() {
+  if (!getApiKey()) {
+    document.getElementById('api-screen').style.display = 'flex';
+  } else {
+    document.getElementById('api-screen').style.display = 'none';
+  }
+}
+
+function makeHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "x-api-key": getApiKey(),
+    "anthropic-version": "2023-06-01",
+    "anthropic-dangerous-direct-browser-access": "true"
+  };
+}
+const QUESTIONS = [
+  { text: "Orders down 10% on Amazon — diagnose it", cat: "diagnosis" },
+  { text: "DAU on Instagram Stories is down 15% — walk me through it", cat: "diagnosis" },
+  { text: "Checkout conversion on the mobile app dropped 8% last week", cat: "diagnosis" },
+  { text: "Notification open rates fell 20% after the last release", cat: "diagnosis" },
+  { text: "Engagement on Zomato UGC has gone down", cat: "diagnosis" },
+  { text: "User session length dropped by 2 minutes on average — is this good or bad?", cat: "diagnosis" },
+  { text: "Your NPS score dropped 12 points this quarter", cat: "diagnosis" },
+  { text: "Should Instagram Stories stay 24 or 48 hours?", cat: "design" },
+  { text: "How would you design a garage door opener?", cat: "design" },
+  { text: "Estimate the number of elevators in a 50-storey building", cat: "design" },
+  { text: "Should we add a tipping feature to Swiggy?", cat: "design" },
+  { text: "WhatsApp wants to add a reaction limit — maximum 3 reactions per message", cat: "design" },
+  { text: "How would you grow Google Search?", cat: "growth" },
+  { text: "Amazon enters the hyperlocal delivery business — how do you think about it?", cat: "growth" },
+  { text: "Revenue from the free-to-paid conversion funnel is flat for 3 months", cat: "growth" },
+  { text: "A new market launch shows 40% lower activation than projected", cat: "growth" },
+  { text: "A key enterprise customer says the product is too slow — investigate", cat: "ambiguous" },
+  { text: "Our B2B SaaS product has high activation but 60% churn by month 3", cat: "ambiguous" },
+];
+
+const SCORE_PROMPT = `You are ProbeLens, scoring a PM's clarifying questions against an 8-row first-principles framework.
+
+THE 8 ROWS: WHY, WHAT, WHO, WHERE, WHEN, HOW, SO WHAT, HOW WILL WE KNOW.
+Rows 1-5 are decomposition. Rows 6-8 are solutioning. A strong answer covers all 5 decomposition rows.
+
+SCORING:
+- "covered": user asked at least one question addressing this row's core lens
+- "shallow": user touched the row but missed the key depth question
+- "missed": user asked nothing relevant to this row
+
+PLAIN ENGLISH MISTAKE LINES — write mistake_flag like this:
+- WHY missed: "You jumped straight into ideas without asking what the business is actually trying to achieve."
+- WHAT missed: "You took the problem at face value. Ask whether the data actually confirms there is a problem and what the baseline looks like."
+- WHO missed: "You treated everyone as one group. The fix for a power user churning is completely different from a new user not activating."
+- WHERE missed: "You did not ask where exactly the problem happens in the journey. Entry point and results page problems need different solutions."
+- WHEN missed: "You did not ask when this started. A sudden shift points to a specific event while a slow drift points to a structural habit change."
+- HOW missed: "You moved to solutions without naming a root cause. Ask what mechanism is actually driving this before deciding what to fix."
+- SO WHAT missed: "You did not ask about constraints. The right move depends entirely on what is actually feasible right now."
+- HOW WILL WE KNOW missed: "You did not define what success looks like. Without a number to hit you cannot tell if any initiative actually worked."
+
+"what_strong_adds" STYLE RULES — follow these exactly:
+- ONE sentence only. Never two sentences. Never use "because" to chain clauses.
+- Lead with the action: "Ask whether", "Also pin", "Name the segment", "Push deeper on"
+- Give two or three concrete options separated by "or"
+- Always use real named entities. Say "Perplexity and ChatGPT" not "AI competitors". Say "Gen Z on TikTok" not "younger users". Say "Blinkit and Zepto" not "quick commerce players".
+- Never use the dash symbol. Use commas or "or" instead.
+- No explaining why. One question, two or three options, stop.
+
+GOOD EXAMPLES of what_strong_adds:
+- "Also pin the business metric. Is growth defined as revenue per query, total query volume, or defending share against Perplexity and ChatGPT?"
+- "Ask where Google is losing. Is it at query initiation meaning users open TikTok or ChatGPT first, or at the results page where queries arrive but users leave without clicking?"
+- "Name the segment more precisely. Is the churning cohort Gen Z who never built a Google habit, or power users drifting to Perplexity for research queries?"
+- "Ask when this started. Did query share break after ChatGPT launched in late 2022, or has this been a slow multi-year drift?"
+- "Push deeper on the mechanism. Is the root cause format fatigue with ten blue links, trust issues with result quality, or habit displacement by TikTok and Reddit?"
+
+BAD EXAMPLES — never write like this:
+- "A sharper answer would pin down the business objective behind growth, is this about revenue per query, advertiser retention, or defending Google's position as the default answer layer before a regulatory or competitive event forces a rethink." (too long, too many clauses)
+- "Ask where in the journey the gap shows up. Is Google losing at the moment of intent, meaning users open a different app first, or does the query arrive but the results page fails to convert into a click or a follow-up search, because entry point problems and results quality problems need different teams and different solutions." (two sentences joined by because, too long)
+
+VERDICT STYLE RULES:
+- Two to three short sentences. Each sentence is one idea.
+- Sentence 1: what they did well.
+- Sentence 2: the biggest gap in plain English.
+- Sentence 3: why it matters, optional.
+- No comma chains. No jargon. No dash symbol. Write like you are talking to the person.
+
+GOOD VERDICT EXAMPLE:
+"Good competitive instincts and you named the right threats. You skipped the basics though. Without knowing where or when the problem started, you risk building a solution before confirming there is a problem."
+
+BAD VERDICT EXAMPLE:
+"The questions show competitive awareness and some user segmentation, but they skip the foundational diagnostic work entirely, no baseline data check, no pinning of where or when the problem lives, no definition of what winning looks like, which means the team could build a solution before confirming there is a problem worth solving."
+
+Respond ONLY with valid compact JSON:
+{"rows":[{"id":"WHY","coverage":"covered|shallow|missed","what_user_asked":"one line summary of what they asked, or null if missed","what_strong_adds":"ONE sharp sentence, named entities, binary options, no dash symbol","mistake_flag":"plain English one-liner, only if missed or shallow, else null"}],"overall_score":{"covered":0,"shallow":0,"missed":0},"verdict":"two to three plain English sentences, no jargon, no dash symbol"}`;
+
+function renderScore(data) {
+  const s = data.overall_score || {};
+  document.getElementById('score-title').textContent = currentQuestion.text;
+  document.getElementById('score-summary').innerHTML = `
+    <div class="score-pill total">${data.verdict||''}</div>
+    <div class="score-pill covered"><i class="ti ti-check" aria-hidden="true"></i> ${s.covered||0} covered</div>
+    <div class="score-pill shallow"><i class="ti ti-minus" aria-hidden="true"></i> ${s.shallow||0} shallow</div>
+    <div class="score-pill missed"><i class="ti ti-x" aria-hidden="true"></i> ${s.missed||0} missed</div>
+  `;
+
+  const tbody = document.getElementById('rubric-body');
+  tbody.innerHTML = '';
+
+  (data.rows||[]).forEach(row => {
+    const isDecomp = ['WHY','WHAT','WHO','WHERE','WHEN'].includes(row.id);
+    const cov = row.coverage || 'missed';
+
+    const icon = cov === 'covered' ? '✓' : cov === 'shallow' ? '◑' : '✗';
+    const iconColor = cov === 'covered' ? '#3b6d11' : cov === 'shallow' ? '#7a4a0a' : '#922';
+
+    const card = document.createElement('div');
+    card.className = 'score-card';
+    card.innerHTML = `
+      <div class="score-card-head">
+        <span class="lens-pill ${isDecomp?'d':'s'}">${row.id}</span>
+        <span class="coverage-badge ${cov}">${cov}</span>
+        <span class="score-knife">${getKnife(row.id)}</span>
+      </div>
+      ${row.what_user_asked ? `<div class="score-asked"><span style="color:${iconColor};font-weight:600;margin-right:5px">${icon}</span>${row.what_user_asked}</div>` : `<div class="score-asked" style="color:var(--text-muted,#aaa)"><span style="color:#922;font-weight:600;margin-right:5px">✗</span>Not asked</div>`}
+      ${row.what_strong_adds ? `<div class="score-adds"><span style="margin-right:5px">→</span>${row.what_strong_adds}</div>` : ''}
+      ${row.mistake_flag ? `<div class="score-mistake"><span style="margin-right:4px">⚠</span>${row.mistake_flag}</div>` : ''}
+    `;
+    tbody.appendChild(card);
+  });
+
+  document.getElementById('p-results').style.display = 'block';
+}
+
+function getKnife(id) {
+  const map = { WHY:'North Star', WHAT:'Math', WHO:'Players + Segment', WHERE:'Segment + Journey', WHEN:'Control', HOW:'5 Whys', 'SO WHAT':'Impact x Effort', 'HOW WILL WE KNOW':'Math' };
+  return map[id] || '';
+}
+
+let currentQuestion = null;
+let currentCat = 'all';
+let scoredBriefData = null;
+
+function filterCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderQuestions();
+}
+
+function renderQuestions() {
+  const list = document.getElementById('q-list');
+  if (!list) return;
+  const filtered = currentCat === 'all' ? QUESTIONS : QUESTIONS.filter(q => q.cat === currentCat);
+  list.innerHTML = filtered.map(q => `
+    <div class="q-item" onclick="selectQuestion(${QUESTIONS.indexOf(q)})">
+      <span>${q.text}</span>
+      <span class="q-cat ${q.cat}">${q.cat}</span>
+    </div>
+  `).join('');
+}
+
+function selectQuestion(idx) {
+  currentQuestion = QUESTIONS[idx];
+  document.getElementById('active-q-display').textContent = currentQuestion.text;
+  document.getElementById('user-answer').value = '';
+  document.getElementById('p-pick').style.display = 'none';
+  document.getElementById('p-answer').style.display = 'block';
+  document.getElementById('p-results').style.display = 'none';
+  document.getElementById('brief-compare').style.display = 'none';
+  scoredBriefData = null;
+}
+
+function randomQuestion() {
+  const pool = currentCat === 'all' ? QUESTIONS : QUESTIONS.filter(q => q.cat === currentCat);
+  const q = pool[Math.floor(Math.random() * pool.length)];
+  selectQuestion(QUESTIONS.indexOf(q));
+}
+
+function resetPractice() {
+  document.getElementById('p-pick').style.display = 'block';
+  document.getElementById('p-answer').style.display = 'none';
+  document.getElementById('p-loading').style.display = 'none';
+  document.getElementById('p-results').style.display = 'none';
+  document.getElementById('brief-compare').style.display = 'none';
+  renderQuestions();
+}
+
+async function scoreAnswer() {
+  const answer = document.getElementById('user-answer').value.trim();
+  if (!answer) { document.getElementById('user-answer').focus(); return; }
+  const btn = document.getElementById('score-btn');
+  btn.disabled = true;
+  document.getElementById('p-answer').style.display = 'none';
+  document.getElementById('p-loading').style.display = 'block';
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: makeHeaders(),
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6", max_tokens: 4000,
+        system: SCORE_PROMPT,
+        messages: [{ role: "user", content: `Question: ${currentQuestion.text}\n\nPM's clarifying questions:\n${answer}` }]
+      })
+    });
+    const data = await res.json();
+    const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch(e) { const s=raw.indexOf('{'),end=raw.lastIndexOf('}'); parsed=JSON.parse(raw.slice(s,end+1)); }
+    renderScore(parsed);
+  } catch(err) {
+    console.error(err);
+    alert("Scoring failed — check console.");
+    document.getElementById('p-answer').style.display = 'block';
+  }
+  document.getElementById('p-loading').style.display = 'none';
+  btn.disabled = false;
+}
+
+function renderScore(data) {
+  const s = data.overall_score || {};
+  document.getElementById('score-title').textContent = currentQuestion.text;
+  document.getElementById('score-summary').innerHTML = `
+    <div class="score-pill total">${data.verdict||''}</div>
+    <div class="score-pill covered"><i class="ti ti-check" aria-hidden="true"></i> ${s.covered||0} covered</div>
+    <div class="score-pill shallow"><i class="ti ti-minus" aria-hidden="true"></i> ${s.shallow||0} shallow</div>
+    <div class="score-pill missed"><i class="ti ti-x" aria-hidden="true"></i> ${s.missed||0} missed</div>
+  `;
+  const container = document.getElementById('rubric-body');
+  container.innerHTML = '';
+  let prevType = null;
+  (data.rows||[]).forEach(row => {
+    const isDecomp = ['WHY','WHAT','WHO','WHERE','WHEN'].includes(row.id);
+    if (prevType === 'decomp' && !isDecomp) {
+      const divider = document.createElement('div');
+      divider.style.cssText = 'height:1px;background:var(--border,rgba(0,0,0,0.1));margin:4px 0;';
+      container.appendChild(divider);
+    }
+    prevType = isDecomp ? 'decomp' : 'solution';
+    const cov = row.coverage || 'missed';
+    const icon = cov === 'covered' ? '✓' : cov === 'shallow' ? '◑' : '✗';
+    const iconColor = cov === 'covered' ? '#3b6d11' : cov === 'shallow' ? '#7a4a0a' : '#922';
+    const card = document.createElement('div');
+    card.className = 'score-card';
+    card.innerHTML = `
+      <div class="score-card-head">
+        <span class="lens-pill ${isDecomp?'d':'s'}">${row.id}</span>
+        <span class="coverage-badge ${cov}">${cov}</span>
+        <span class="score-knife">${getKnife(row.id)}</span>
+      </div>
+      <div class="score-asked"><span style="color:${iconColor};font-weight:600;margin-right:5px">${icon}</span>${row.what_user_asked || 'Not asked'}</div>
+      ${row.what_strong_adds ? `<div class="score-adds"><span style="margin-right:5px;color:#185fa5">→</span>${row.what_strong_adds}</div>` : ''}
+      ${row.mistake_flag ? `<div class="score-mistake"><span style="margin-right:4px">⚠</span>${row.mistake_flag}</div>` : ''}
+    `;
+    container.appendChild(card);
+  });
+  document.getElementById('p-results').style.display = 'block';
+}
+
+async function showBrief() {
+  if (scoredBriefData) { renderCompareBrief(scoredBriefData); return; }
+  const compareEl = document.getElementById('brief-compare');
+  compareEl.style.display = 'block';
+  compareEl.innerHTML = '<div class="loading-label">Generating full brief</div><div class="skel-table"><div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div><div class="skel-row"><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div><div class="skel-cell"></div></div></div>';
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: makeHeaders(),
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, system: SYSTEM_PROMPT, messages: [{ role: "user", content: currentQuestion.text }] })
+    });
+    const data = await res.json();
+    const raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch(e) { const s=raw.indexOf('{'),end=raw.lastIndexOf('}'); parsed=JSON.parse(raw.slice(s,end+1)); }
+    scoredBriefData = parsed;
+    renderCompareBrief(parsed);
+  } catch(err) {
+    compareEl.innerHTML = '<div style="font-size:12px;color:#922;padding:12px;">Failed to load brief — try again.</div>';
+  }
+}
+
+function renderCompareBrief(data) {
+  const compareEl = document.getElementById('brief-compare');
+  compareEl.style.display = 'block';
+  let html = `<div style="font-size:12px;font-weight:500;margin-bottom:8px;color:var(--text-primary)">Full brief — what ProbeLens would produce</div>
+  <div class="brief-wrap"><table><thead><tr><th style="width:80px">Lens</th><th>Clarifying questions</th><th>Known / missing</th><th>Locked output</th></tr></thead><tbody>`;
+  let prevType = null;
+  (data.rows||[]).forEach(row => {
+    const isDecomp = row.type === 'decomp';
+    const hasGap = row.gap_flag && row.gap_flag !== 'null' && row.gap_flag !== null;
+    if (prevType === 'decomp' && !isDecomp) html += '<tr class="divider"><td colspan="4"></td></tr>';
+    prevType = row.type;
+    const qs = (row.clarifying_questions||[]).map(q=>`<li>${q}</li>`).join('');
+    const lockedOutput = row.locked_output || row.walk_away || '—';
+    html += `<tr>
+      <td><span class="lens-pill ${isDecomp?'d':'s'}">${row.id}</span><span class="knife">${row.knife||''}</span></td>
+      <td><ul class="cq">${qs}</ul></td>
+      <td><div class="known">${row.known||'—'}</div>${row.missing&&row.missing!=='null'?`<div class="missing">${row.missing}</div>`:''}</td>
+      <td><div class="locked${hasGap?' has-gap':''}">${lockedOutput}</div>${hasGap?`<div class="gap-chip"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span>${row.gap_flag}</span></div>`:''}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div>';
+  if (data.closing_hypothesis) html += `<div class="hyp on" style="margin-top:10px;"><div class="hyp-label">Closing hypothesis</div><div class="hyp-text">${data.closing_hypothesis}</div></div>`;
+  compareEl.innerHTML = html;
+}
+
+renderQuestions();
+initApiKey();
+</script>
+</body>
+</html>
