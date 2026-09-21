@@ -2,6 +2,10 @@
 
 > An AI-powered tool that walks any product problem through a structured 8-row first-principles framework — generating clarifying questions, flagging gaps, and producing a locked one-page decomposition brief.
 
+**Live tool:** [rishendra125.github.io/probeLens_project](https://rishendra125.github.io/probeLens_project/)
+
+> To use the tool, you need a free Anthropic API key. Get one at [console.anthropic.com](https://console.anthropic.com) — paste it into the key screen on first open. Your key stays in your browser only and is never stored on any server.
+
 ---
 
 ## What it does
@@ -267,12 +271,36 @@ Before calibration the questions were correct but read like written analysis —
 
 ---
 
+## Tech Stack
+
+| Layer | Choice |
+|---|---|
+| Reasoning engine | Claude Sonnet 4.6 (Anthropic API) |
+| Frontend | Single self-contained HTML file |
+| Framework backbone | 8-row first-principles table embedded in system prompt |
+| API key handling | User-supplied key stored in browser localStorage only |
+| Hosting | GitHub Pages — no backend, no server, no build step |
+
+---
+
+## How to use
+
+1. Open [rishendra125.github.io/probeLens_project](https://rishendra125.github.io/probeLens_project/)
+2. Get a free Anthropic API key at [console.anthropic.com](https://console.anthropic.com)
+3. Paste your key into the screen on first open
+4. Choose Brief Generator or Interview Practice and start
+
+Your API key never leaves your browser. Each user pays for their own API usage — casual use costs less than $0.10.
+
+---
+
 ## File Layout
 
 ```
 probelens/
 ├── README.md                          # This file
-├── probelens.html                     # The full tool — both modes, self-contained
+├── index.html                         # Redirect to public version
+├── probelens_public.html              # Live public tool with API key screen
 ├── probelens_system_prompt.md         # System prompt source — framework backbone
 └── screenshots/
     ├── brief_generator_layout.png     # Brief Generator empty state
@@ -281,14 +309,15 @@ probelens/
     └── interview_practice_sample.png  # Interview Practice score output
 ```
 
-All logic, UI, and API calls live in a single `probelens.html` file. No backend, no dependencies, no build step. Open in a browser or host on any static server.
+All logic, UI, and API calls live in a single `probelens_public.html` file. No backend, no dependencies, no build step.
 
 ---
 
-
+## Author
 
 **Rishendra Vikram Singh**
 Senior Consultant — SPRAC Services Pvt. Ltd.
 PMP · PMI-ACP · A-CSM · Microsoft Dynamics 365 CE · Microsoft Agentic AI Business Solutions Architect
 
 [Portfolio](https://rishendra125.github.io) · [LinkedIn](https://linkedin.com/in/rishendra-vikram-singh-a7355718a/)
+
